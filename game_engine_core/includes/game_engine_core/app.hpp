@@ -1,5 +1,7 @@
 #pragma once
 
+#include <memory>
+
 namespace game_engine {
     class App {
     public:
@@ -15,5 +17,8 @@ namespace game_engine {
                           const char *title);
 
         virtual void onUpdate() {}
+
+    private:
+        std::unique_ptr<class Window> m_window;
     };
 }

@@ -7,17 +7,24 @@ set(ENGINE_PUBLIC_INCLUDES
     includes/game_engine_core/log.hpp
 )
 
+set(ENGINE_PRIVATE_INCLUDES
+    includes/game_engine_core/window.hpp
+)
+
 set(ENGINE_PRIVATE_SOURCES
     src/game_engine_core/app.cpp
     src/game_engine_core/log.cpp
+    src/game_engine_core/window.cpp
 )
 
 add_library(${ENGINE_PROJECT_NAME}
     ${ENGINE_PUBLIC_INCLUDES}
+    ${ENGINE_PRIVATE_INCLUDES}
     ${ENGINE_PRIVATE_SOURCES}
 )
 
 target_include_directories(${ENGINE_PROJECT_NAME} PUBLIC includes)
+target_include_directories(${ENGINE_PROJECT_NAME} PRIVATE src)
 target_compile_features(${ENGINE_PROJECT_NAME} PUBLIC cxx_std_17)
 
 add_subdirectory(../external/glfw ${CMAKE_CURRENT_BINARY_DIR}/glfw)
