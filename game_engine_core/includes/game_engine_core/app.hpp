@@ -1,5 +1,7 @@
 #pragma once
 
+#include "game_engine_core/event.hpp"
+
 #include <memory>
 
 namespace game_engine {
@@ -20,5 +22,8 @@ namespace game_engine {
 
     private:
         std::unique_ptr<class Window> m_window;
+
+        EventDispatcher m_eventDispatcher;
+        bool m_isCloseWindow = false;
     };
 }
