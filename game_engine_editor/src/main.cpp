@@ -8,14 +8,14 @@ private:
     int frame{0};
 
     virtual void onUpdate() override {
-        // std::cout << "update frame: " << ++frame << '\n';
+        
     }
 };
 
 int main() {
     auto app = std::make_unique<MainApp>();
 
-    int code = app->start(1024, 768, "App");    
+    int code = app->start(1024, 768, "GameEngine");    
 
     return code;
 }
