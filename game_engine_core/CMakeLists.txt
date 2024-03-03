@@ -10,6 +10,9 @@ set(ENGINE_PUBLIC_INCLUDES
 
 set(ENGINE_PRIVATE_INCLUDES
     includes/game_engine_core/window.hpp
+    includes/game_engine_core/rendering/OpenGL/shader_program.hpp
+    includes/game_engine_core/rendering/OpenGL/vertex_buffer.hpp
+    includes/game_engine_core/rendering/OpenGL/vertex_array.hpp    
 )
 
 set(ENGINE_PRIVATE_SOURCES
@@ -17,21 +20,31 @@ set(ENGINE_PRIVATE_SOURCES
     src/game_engine_core/log.cpp
     src/game_engine_core/window.cpp
     src/game_engine_core/event.cpp
+    src/game_engine_core/rendering/OpenGL/shader_program.cpp
+    src/game_engine_core/rendering/OpenGL/vertex_buffer.cpp
+    src/game_engine_core/rendering/OpenGL/vertex_array.cpp    
 )
 
-
-add_library(${ENGINE_PROJECT_NAME}
-${ENGINE_PUBLIC_INCLUDES}
+set(ENGINE_ALL_SOURCES
+    ${ENGINE_PUBLIC_INCLUDES}
     ${ENGINE_PRIVATE_INCLUDES}
     ${ENGINE_PRIVATE_SOURCES}
-    )
-    
-    target_include_directories(${ENGINE_PROJECT_NAME} PUBLIC includes)
-    target_include_directories(${ENGINE_PROJECT_NAME} PRIVATE src)
-    target_compile_features(${ENGINE_PROJECT_NAME} PUBLIC cxx_std_17)
-    
-    add_subdirectory(../external/glfw ${CMAKE_CURRENT_BINARY_DIR}/glfw)
-    target_link_libraries(${ENGINE_PROJECT_NAME} PRIVATE glfw)
+)
+
+add_library(${ENGINE_PROJECT_NAME} STATIC
+    ${ENGINE_ALL_SOURCES}
+)
+
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES
+    ${ENGINE_ALL_SOURCES}
+)
+
+target_include_directories(${ENGINE_PROJECT_NAME} PUBLIC includes)
+target_include_directories(${ENGINE_PROJECT_NAME} PRIVATE src)
+target_compile_features(${ENGINE_PROJECT_NAME} PUBLIC cxx_std_17)
+
+add_subdirectory(../external/glfw ${CMAKE_CURRENT_BINARY_DIR}/glfw)
+target_link_libraries(${ENGINE_PROJECT_NAME} PRIVATE glfw)
 
 add_subdirectory(../external/spdlog ${CMAKE_CURRENT_BINARY_DIR}/spdlog)
 target_link_libraries(${ENGINE_PROJECT_NAME} PRIVATE spdlog)
