@@ -40,9 +40,15 @@ namespace game_engine {
         bind();
         vertexBuffer.bind();
 
-        glEnableVertexAttribArray(m_elementsCount);
-        glVertexAttribPointer(m_elementsCount, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+        for (const BufferElement &currentElement : vertexBuffer.getLayout().getElements()) {
+            glEnableVertexAttribArray(m_elementsCount);
+            glVertexAttribPointer(m_elementsCount,
+                                  static_cast<GLint>(currentElement.m_componentsCount),
+                                  currentElement.m_componentType, GL_FALSE,
+                                  static_cast<GLsizei>(vertexBuffer.getLayout().getStride()),
+                                  reinterpret_cast<const void*>(currentElement.m_offset));
 
-        ++m_elementsCount;
+            ++m_elementsCount;
+        }
     }
 }

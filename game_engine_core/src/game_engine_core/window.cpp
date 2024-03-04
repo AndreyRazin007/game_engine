@@ -26,6 +26,12 @@ namespace game_engine {
         0.0f, 0.0f, 1.0f
     };
 
+    GLfloat positionsColors[] {
+        0.0f,  0.5f, 0.0f, 1.0f, 1.0f, 0.0f,
+        0.5f,  -0.5f, 0.0f, 0.0f, 1.0f, 1.0f,
+        -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 1.0f
+    };
+
     const char *stringVertexShader =
         "#version 460\n"
         "layout(location = 0) in vec3 vertex_position;"
@@ -48,7 +54,10 @@ namespace game_engine {
     std::unique_ptr<VertexBuffer> pointsVBO;
     std::unique_ptr<VertexBuffer> colorsVBO;
 
-    std::unique_ptr<VertexArray> vao;
+    std::unique_ptr<VertexArray> vaoOneBuffer;
+    std::unique_ptr<VertexArray> vaoTwoBuffers;
+
+    std::unique_ptr<VertexBuffer> positionsColorsVBO;
 
     Window::Window(std::string title, const unsigned int width, const unsigned int height)
         : m_data{{std::move(title)}, width, height} {
@@ -129,12 +138,28 @@ namespace game_engine {
             return false;
         }
 
-        pointsVBO = std::make_unique<VertexBuffer>(points, sizeof(points));
-        colorsVBO = std::make_unique<VertexBuffer>(colors, sizeof(colors));
-        vao = std::make_unique<VertexArray>();
+        BufferLayout bufferLayout_1_vec3 {
+            ShaderDataType::Float3
+        };
 
-        vao->addBuffer(*pointsVBO);
-        vao->addBuffer(*colorsVBO);
+        vaoTwoBuffers = std::make_unique<VertexArray>();
+        pointsVBO = std::make_unique<VertexBuffer>(points, sizeof(points), bufferLayout_1_vec3);
+        colorsVBO = std::make_unique<VertexBuffer>(colors, sizeof(colors), bufferLayout_1_vec3);
+
+        vaoTwoBuffers->addBuffer(*pointsVBO);
+        vaoTwoBuffers->addBuffer(*colorsVBO);
+
+        BufferLayout buffer_layout_2_vec3
+        {
+            ShaderDataType::Float3,
+            ShaderDataType::Float3
+        };
+
+        vaoOneBuffer = std::make_unique<VertexArray>();
+        positionsColorsVBO = std::make_unique<VertexBuffer>(positionsColors,
+            sizeof(positionsColors), buffer_layout_2_vec3);
+
+        vaoOneBuffer->addBuffer(*positionsColorsVBO);
 
         return 0;
     }
@@ -149,10 +174,6 @@ namespace game_engine {
                      m_backgroundColor[2], m_backgroundColor[3]);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        shaderProgram->bind();
-        vao->bind();
-        glDrawArrays(GL_TRIANGLES, 0, 3);
-
         ImGuiIO &io = ImGui::GetIO();
         io.DisplaySize.x = static_cast<float>(getWidth());
         io.DisplaySize.y = static_cast<float>(getHeight());
@@ -161,10 +182,22 @@ namespace game_engine {
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-        ImGui::ShowDemoWindow();
-
         ImGui::Begin("Background color window");
         ImGui::ColorEdit4("Background color", m_backgroundColor);
+
+        static bool useTwoBuffers = true;
+        ImGui::Checkbox("2 Buffers", &useTwoBuffers);
+
+        if (useTwoBuffers) {
+            shaderProgram->bind();
+            vaoTwoBuffers->bind();
+            glDrawArrays(GL_TRIANGLES, 0, 3);
+        } else {
+            shaderProgram->bind();
+            vaoOneBuffer->bind();
+            glDrawArrays(GL_TRIANGLES, 0, 3);
+        }
+
         ImGui::End();
 
         ImGui::Render();
