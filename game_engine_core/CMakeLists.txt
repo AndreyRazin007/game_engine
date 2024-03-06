@@ -6,6 +6,7 @@ set(ENGINE_PUBLIC_INCLUDES
     includes/game_engine_core/app.hpp
     includes/game_engine_core/log.hpp
     includes/game_engine_core/event.hpp
+    includes/game_engine_core/camera.hpp
 )
 
 set(ENGINE_PRIVATE_INCLUDES
@@ -20,6 +21,7 @@ set(ENGINE_PRIVATE_SOURCES
     src/game_engine_core/app.cpp
     src/game_engine_core/log.cpp
     src/game_engine_core/window.cpp
+    src/game_engine_core/camera.cpp
     src/game_engine_core/event.cpp
     src/game_engine_core/rendering/OpenGL/shader_program.cpp
     src/game_engine_core/rendering/OpenGL/vertex_buffer.cpp
