@@ -12,7 +12,8 @@ set(ENGINE_PRIVATE_INCLUDES
     includes/game_engine_core/window.hpp
     includes/game_engine_core/rendering/OpenGL/shader_program.hpp
     includes/game_engine_core/rendering/OpenGL/vertex_buffer.hpp
-    includes/game_engine_core/rendering/OpenGL/vertex_array.hpp    
+    includes/game_engine_core/rendering/OpenGL/vertex_array.hpp
+    includes/game_engine_core/rendering/OpenGL/index_buffer.hpp
 )
 
 set(ENGINE_PRIVATE_SOURCES
@@ -22,7 +23,8 @@ set(ENGINE_PRIVATE_SOURCES
     src/game_engine_core/event.cpp
     src/game_engine_core/rendering/OpenGL/shader_program.cpp
     src/game_engine_core/rendering/OpenGL/vertex_buffer.cpp
-    src/game_engine_core/rendering/OpenGL/vertex_array.cpp    
+    src/game_engine_core/rendering/OpenGL/vertex_array.cpp
+    src/game_engine_core/rendering/OpenGL/index_buffer.cpp
 )
 
 set(ENGINE_ALL_SOURCES
@@ -51,6 +53,9 @@ target_link_libraries(${ENGINE_PROJECT_NAME} PRIVATE spdlog)
 
 add_subdirectory(../external/glad ${CMAKE_CURRENT_BINARY_DIR}/glad)
 target_link_libraries(${ENGINE_PROJECT_NAME} PRIVATE glad)
+
+add_subdirectory(../external/glm ${CMAKE_CURRENT_BINARY_DIR}/glm)
+target_link_libraries(${ENGINE_PROJECT_NAME} PRIVATE glm)
 
 set(IMGUI_INCLUDES
     ../external/imgui/imgui.h

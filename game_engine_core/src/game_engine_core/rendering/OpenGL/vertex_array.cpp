@@ -36,7 +36,7 @@ namespace game_engine {
         glBindVertexArray(0);
     }
 
-    void VertexArray::addBuffer(const VertexBuffer &vertexBuffer) {
+    void VertexArray::addVertexBuffer(const VertexBuffer &vertexBuffer) {
         bind();
         vertexBuffer.bind();
 
@@ -50,5 +50,11 @@ namespace game_engine {
 
             ++m_elementsCount;
         }
+    }
+
+    void VertexArray::setIndexBuffer(const IndexBuffer &indexBuffer) {
+        bind();
+        indexBuffer.bind();
+        m_indicesCount = indexBuffer.getCount();
     }
 }

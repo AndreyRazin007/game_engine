@@ -3,6 +3,7 @@
 #include "game_engine_core/rendering/OpenGL/shader_program.hpp"
 #include "game_engine_core/rendering/OpenGL/vertex_buffer.hpp"
 #include "game_engine_core/rendering/OpenGL/vertex_array.hpp"
+#include "game_engine_core/rendering/OpenGL/index_buffer.hpp"
 
 #include "glad/glad.h"
 #include "GLFW/glfw3.h"
@@ -11,53 +12,50 @@
 #include "imgui/backends/imgui_impl_opengl3.h"
 #include "imgui/backends/imgui_impl_glfw.h"
 
+#include "glm/mat3x3.hpp"
+#include "glm/trigonometric.hpp"
+
 namespace game_engine {
     static bool s_GLFWInitialized = false;
 
-    GLfloat points[] = {
-        0.0f,  0.5f, 0.0f,
-        0.5f,  -0.5f, 0.0f,
-        -0.5f, -0.5f, 0.0f
+    GLfloat positionsColorsTwo[] = {
+        -0.5f, -0.5f, 0.0f, 1.0f, 1.0f, 0.0f,
+        0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 1.0f,
+        -0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 1.0f,
+        0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 0.0f
     };
 
-    GLfloat colors[] = {
-        1.0f, 0.0f, 0.0f,
-        0.0f, 1.0f, 0.0f,
-        0.0f, 0.0f, 1.0f
-    };
-
-    GLfloat positionsColors[] {
-        0.0f,  0.5f, 0.0f, 1.0f, 1.0f, 0.0f,
-        0.5f,  -0.5f, 0.0f, 0.0f, 1.0f, 1.0f,
-        -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 1.0f
-    };
+    GLuint indices[] { 0, 1, 2, 3, 2, 1 };
 
     const char *stringVertexShader =
-        "#version 460\n"
-        "layout(location = 0) in vec3 vertex_position;"
-        "layout(location = 1) in vec3 vertex_color;"
-        "out vec3 color;"
-        "void main() {"
-        "   color = vertex_color;"
-        "   gl_Position = vec4(vertex_position, 1.0);"
-        "}";
+        R"(#version 460
+           layout(location = 0) in vec3 vertex_position;
+           layout(location = 1) in vec3 vertex_color;
+           uniform mat4 model_matrix;
+           out vec3 color;
+           void main() {
+              color = vertex_color;
+              gl_Position = model_matrix * vec4(vertex_position, 1.0);
+           }
+        )";
 
     const char *stringFragmentShader =
-        "#version 460\n"
-        "in vec3 color;"
-        "out vec4 frag_color;"
-        "void main() {"
-        "   frag_color = vec4(color, 1.0);"
-        "}";
+        R"(#version 460
+           in vec3 color;
+           out vec4 fragment_color;
+           void main() {
+              fragment_color = vec4(color, 1.0);
+           }
+        )";
 
     std::unique_ptr<ShaderProgram> shaderProgram;
-    std::unique_ptr<VertexBuffer> pointsVBO;
-    std::unique_ptr<VertexBuffer> colorsVBO;
-
-    std::unique_ptr<VertexArray> vaoOneBuffer;
-    std::unique_ptr<VertexArray> vaoTwoBuffers;
-
     std::unique_ptr<VertexBuffer> positionsColorsVBO;
+    std::unique_ptr<VertexArray> vao;
+    std::unique_ptr<IndexBuffer> indexBuffer;
+
+    float scale[3] = { 1.0f, 1.0f, 1.0f };
+    float rotate = 0.0f;
+    float translate[3] = { 0.0f, 0.0f, 0.0f };
 
     Window::Window(std::string title, const unsigned int width, const unsigned int height)
         : m_data{{std::move(title)}, width, height} {
@@ -142,24 +140,39 @@ namespace game_engine {
             ShaderDataType::Float3
         };
 
-        vaoTwoBuffers = std::make_unique<VertexArray>();
-        pointsVBO = std::make_unique<VertexBuffer>(points, sizeof(points), bufferLayout_1_vec3);
-        colorsVBO = std::make_unique<VertexBuffer>(colors, sizeof(colors), bufferLayout_1_vec3);
-
-        vaoTwoBuffers->addBuffer(*pointsVBO);
-        vaoTwoBuffers->addBuffer(*colorsVBO);
-
         BufferLayout buffer_layout_2_vec3
         {
             ShaderDataType::Float3,
             ShaderDataType::Float3
         };
 
-        vaoOneBuffer = std::make_unique<VertexArray>();
-        positionsColorsVBO = std::make_unique<VertexBuffer>(positionsColors,
-            sizeof(positionsColors), buffer_layout_2_vec3);
+        vao = std::make_unique<VertexArray>();
+        positionsColorsVBO = std::make_unique<VertexBuffer>(positionsColorsTwo,
+            sizeof(positionsColorsTwo), buffer_layout_2_vec3);
+        indexBuffer = std::make_unique<IndexBuffer>(indices,
+            sizeof(indices) / sizeof(GLuint));
 
-        vaoOneBuffer->addBuffer(*positionsColorsVBO);
+        vao->addVertexBuffer(*positionsColorsVBO);
+        vao->setIndexBuffer(*indexBuffer);
+
+        glm::mat3 matrix_1{4, 0, 0, 2, 8, 1, 0, 1, 0};
+        glm::mat3 matrix_2{4, 2, 9, 2, 0, 4, 1, 4, 2};
+
+        glm::mat3 result = matrix_1 * matrix_2;
+
+        LOG_INFO("");
+        LOG_INFO("|{0:3} {1:3} {2:3}|", result[0][0], result[1][0], result[2][0]);
+        LOG_INFO("|{0:3} {1:3} {2:3}|", result[0][1], result[1][1], result[2][1]);
+        LOG_INFO("|{0:3} {1:3} {2:3}|", result[0][2], result[1][2], result[2][2]);
+        LOG_INFO("");
+
+        glm::vec4 vector{1, 2, 3, 4};
+        glm::mat4 matrixIdentity{1};
+
+        glm::vec4 resultVector = matrixIdentity * vector;
+
+        LOG_INFO("({0} {1} {2} {3})", resultVector.x, resultVector.y,
+            resultVector.z, resultVector.w);
 
         return 0;
     }
@@ -184,19 +197,34 @@ namespace game_engine {
 
         ImGui::Begin("Background color window");
         ImGui::ColorEdit4("Background color", m_backgroundColor);
+        ImGui::SliderFloat3("scale", scale, 0.0f, 2.0f);
+        ImGui::SliderFloat("rotate", &rotate, 0.0f, 360.0f);
+        ImGui::SliderFloat3("translate", translate, -1.0f, 1.0f);
 
-        static bool useTwoBuffers = true;
-        ImGui::Checkbox("2 Buffers", &useTwoBuffers);
+        shaderProgram->bind();
 
-        if (useTwoBuffers) {
-            shaderProgram->bind();
-            vaoTwoBuffers->bind();
-            glDrawArrays(GL_TRIANGLES, 0, 3);
-        } else {
-            shaderProgram->bind();
-            vaoOneBuffer->bind();
-            glDrawArrays(GL_TRIANGLES, 0, 3);
-        }
+        glm::mat4 scaleMatrix(scale[0], 0, 0, 0,
+                               0, scale[1], 0, 0,
+                               0, 0, scale[2], 0,
+                               0, 0, 0, 1);
+
+        float rotateInRadians = glm::radians(rotate);
+        glm::mat4 rotateMatrix(cos(rotateInRadians), sin(rotateInRadians), 0, 0,
+                                -sin(rotateInRadians), cos(rotateInRadians), 0, 0,
+                                 0, 0, 1, 0,
+                                 0, 0, 0, 1);
+
+        glm::mat4 translateMatrix(1, 0, 0, 0,
+                                   0, 1, 0, 0,
+                                   0, 0, 1, 0,
+                                   translate[0], translate[1], translate[2], 1);
+
+        glm::mat4 modelMatrix = translateMatrix * rotateMatrix * scaleMatrix;
+        shaderProgram->setMatrix_4("model_matrix", modelMatrix);
+
+        vao->bind();
+        glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(vao->getIndicesCount()),
+            GL_UNSIGNED_INT, nullptr);
 
         ImGui::End();
 

@@ -3,6 +3,7 @@
 #include "game_engine_core/log.hpp"
 
 #include "glad/glad.h"
+#include "glm/gtc/type_ptr.hpp"
 
 namespace game_engine {
     bool create_shader(const char *source, const GLenum shaderType, GLuint &shaderId) {
@@ -98,5 +99,9 @@ namespace game_engine {
 
         shaderProgram.m_id = 0;
         shaderProgram.m_isCompiled = false;
+    }
+
+    void ShaderProgram::setMatrix_4(const char *name, const glm::mat4 &matrix) const {
+        glUniformMatrix4fv(glGetUniformLocation(m_id, name), 1, GL_FALSE, glm::value_ptr(matrix));
     }
 }
