@@ -6,7 +6,8 @@
 #include "game_engine_core/rendering/OpenGL/index_buffer.hpp"
 #include "game_engine_core/camera.hpp"
 
-#include "glad/glad.h"
+#include "game_engine_core/rendering/OpenGL/renderer_OpenGL.hpp"
+
 #include "GLFW/glfw3.h"
 
 #include "imgui/imgui.h"
@@ -17,8 +18,6 @@
 #include "glm/trigonometric.hpp"
 
 namespace game_engine {
-    static bool s_GLFWInitialized = false;
-
     GLfloat positionsColorsTwo[] = {
         -0.5f, -0.5f, 0.0f, 1.0f, 1.0f, 0.0f,
         0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 1.0f,
@@ -81,27 +80,26 @@ namespace game_engine {
     int Window::init() {
         LOG_INFO("Creating window {0} with size {1}x{2}", m_data.title, m_data.width, m_data.height);
 
-        if (!s_GLFWInitialized) {
-            if (!glfwInit()) {
-                LOG_CRITICAL("Can't initialize GLFW!");
-                return -1;
-            }
+        glfwSetErrorCallback([](int errorCode, const char *description) {
+            LOG_CRITICAL("GLFW error: {0}", description);
+        });
 
-            s_GLFWInitialized = true;
+        if (!glfwInit()) {
+            LOG_CRITICAL("Can't initialize GLFW!");
+
+            return -1;
         }
 
         m_window = glfwCreateWindow(m_data.width, m_data.height, m_data.title.c_str(),
                                     nullptr, nullptr);
         if (!m_window) {
             LOG_CRITICAL("Can't create window {0} with size {1}x{2}", m_data.title, m_data.width, m_data.height);
-            glfwTerminate();
+
             return -2;
         }
 
-        glfwMakeContextCurrent(m_window);
-
-        if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-            LOG_CRITICAL("Falied to initialize GLAD");
+        if (!RendererOpenGL::init(m_window)) {
+            LOG_CRITICAL("Failed to initialize OpenGL renderer");
 
             return -3;
         }
@@ -133,7 +131,7 @@ namespace game_engine {
 
         glfwSetFramebufferSizeCallback(m_window,
                                        [](GLFWwindow *window, int width, int height) {
-            glViewport(0, 0, width, height);
+            RendererOpenGL::setViewport(width, height);
         });
 
         shaderProgram = std::make_unique<ShaderProgram>(stringVertexShader,
@@ -162,37 +160,22 @@ namespace game_engine {
         vao->addVertexBuffer(*positionsColorsVBO);
         vao->setIndexBuffer(*indexBuffer);
 
-        glm::mat3 matrix_1{4, 0, 0, 2, 8, 1, 0, 1, 0};
-        glm::mat3 matrix_2{4, 2, 9, 2, 0, 4, 1, 4, 2};
-
-        glm::mat3 result = matrix_1 * matrix_2;
-
-        LOG_INFO("");
-        LOG_INFO("|{0:3} {1:3} {2:3}|", result[0][0], result[1][0], result[2][0]);
-        LOG_INFO("|{0:3} {1:3} {2:3}|", result[0][1], result[1][1], result[2][1]);
-        LOG_INFO("|{0:3} {1:3} {2:3}|", result[0][2], result[1][2], result[2][2]);
-        LOG_INFO("");
-
-        glm::vec4 vector{1, 2, 3, 4};
-        glm::mat4 matrixIdentity{1};
-
-        glm::vec4 resultVector = matrixIdentity * vector;
-
-        LOG_INFO("({0} {1} {2} {3})", resultVector.x, resultVector.y,
-            resultVector.z, resultVector.w);
-
         return 0;
     }
 
     void Window::shutdown() {
+        if (ImGui::GetCurrentContext()) {
+            ImGui::DestroyContext();
+        }
+
         glfwDestroyWindow(m_window);
         glfwTerminate();
     }
 
     void Window::onUpdate() {
-        glClearColor(m_backgroundColor[0], m_backgroundColor[1],
-                     m_backgroundColor[2], m_backgroundColor[3]);
-        glClear(GL_COLOR_BUFFER_BIT);
+        RendererOpenGL::setClearColor(m_backgroundColor[0], m_backgroundColor[1],
+                                         m_backgroundColor[2], m_backgroundColor[3]);
+        RendererOpenGL::clear();
 
         ImGuiIO &io = ImGui::GetIO();
         io.DisplaySize.x = static_cast<float>(getWidth());
@@ -240,9 +223,7 @@ namespace game_engine {
         shaderProgram->setMatrix_4("view_projection_matrix",
                                    camera.getProjectionMatrix() * camera.getViewMatrix());
 
-        vao->bind();
-        glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(vao->getIndicesCount()),
-                       GL_UNSIGNED_INT, nullptr);
+        RendererOpenGL::draw(*vao);
 
         ImGui::End();
 
