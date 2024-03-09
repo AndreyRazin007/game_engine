@@ -7,10 +7,13 @@ set(ENGINE_PUBLIC_INCLUDES
     includes/game_engine_core/log.hpp
     includes/game_engine_core/event.hpp
     includes/game_engine_core/camera.hpp
+    includes/game_engine_core/keys.hpp
+    includes/game_engine_core/input.hpp
 )
 
 set(ENGINE_PRIVATE_INCLUDES
     includes/game_engine_core/window.hpp
+    includes/game_engine_core/modules/UI_module.hpp
     includes/game_engine_core/rendering/OpenGL/renderer_OpenGL.hpp
     includes/game_engine_core/rendering/OpenGL/shader_program.hpp
     includes/game_engine_core/rendering/OpenGL/vertex_buffer.hpp
@@ -22,6 +25,8 @@ set(ENGINE_PRIVATE_SOURCES
     src/game_engine_core/app.cpp
     src/game_engine_core/log.cpp
     src/game_engine_core/window.cpp
+    src/game_engine_core/input.cpp
+    src/game_engine_core/modules/UI_module.cpp
     src/game_engine_core/camera.cpp
     src/game_engine_core/event.cpp
     src/game_engine_core/rendering/OpenGL/renderer_OpenGL.cpp

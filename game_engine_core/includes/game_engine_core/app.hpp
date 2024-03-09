@@ -1,6 +1,7 @@
 #pragma once
 
 #include "game_engine_core/event.hpp"
+#include "game_engine_core/camera.hpp"
 
 #include <memory>
 
@@ -19,6 +20,12 @@ namespace game_engine {
                           const char *title);
 
         virtual void onUpdate() {}
+        virtual void onUIDraw() {}
+
+        float cameraPosition[3] = { 0.0f, 0.0f, 1.0f };
+        float cameraRotation[3] = { 0.0f, 0.0f, 0.0f };
+        bool perspectiveCamera = true;
+        Camera camera;
 
     private:
         std::unique_ptr<class Window> m_window;

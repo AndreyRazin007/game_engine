@@ -1,5 +1,7 @@
 #pragma once
 
+#include "game_engine_core/keys.hpp"
+
 #include <functional>
 #include <array>
 
@@ -82,6 +84,33 @@ namespace game_engine {
 
     struct EventWindowClose : public BaseEvent {
         static const EventType type = EventType::WindowClose;
+        
+        virtual EventType getType() const override {
+            return type;
+        }
+    };
+
+    struct EventKeyPressed : public BaseEvent {
+        KeyCode m_keyCode;
+        bool m_repeated;
+
+        static const EventType type = EventType::KeyPressed;
+
+        EventKeyPressed(const KeyCode keyCode, const bool repeated)
+            : m_keyCode{keyCode}, m_repeated{repeated} {}
+        
+        virtual EventType getType() const override {
+            return type;
+        }
+    };
+
+    struct EventKeyReleased : public BaseEvent {
+        KeyCode m_keyCode;
+
+        static const EventType type = EventType::KeyReleased;
+
+        EventKeyReleased(const KeyCode keyCode)
+            : m_keyCode{keyCode} {}
         
         virtual EventType getType() const override {
             return type;
