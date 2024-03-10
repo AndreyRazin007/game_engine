@@ -19,8 +19,19 @@ namespace game_engine {
         void setRotation(const glm::vec3 &rotation);
         void setPositionRotation(const glm::vec3 &position, const glm::vec3 &rotation);
         void setProjectionMode(const ProjectionMode projectionMode);
-        glm::mat4 getViewMatrix() const { return m_viewMatrix; }
-        glm::mat4 getProjectionMatrix() const { return m_projectionMatrix; }
+
+        const glm::mat4 &getViewMatrix() const { return m_viewMatrix; }
+        const glm::mat4 &getProjectionMatrix() const { return m_projectionMatrix; }
+
+        void moveForward(const float delta);
+        void moveRight(const float delta);
+        void moveUp(const float delta);
+
+        const glm::vec3 &getCameraPosition() const { return m_position; }
+        const glm::vec3 &getCameraRotation() const { return m_rotation; }
+
+        void addMovementAndRotation(const glm::vec3 &movementDelta,
+                                    const glm::vec3 &rotationDelta);
 
     private:
         void updateViewMatrix();
@@ -28,8 +39,18 @@ namespace game_engine {
 
         glm::vec3 m_position;
         glm::vec3 m_rotation;
+
         glm::mat4 m_viewMatrix;
         glm::mat4 m_projectionMatrix;
+
         ProjectionMode m_projectionMode;
+
+        glm::vec3 m_direction;
+        glm::vec3 m_right;
+        glm::vec3 m_up;
+
+        static constexpr glm::vec3 s_worldUp{ 0.0f, 0.0f, 1.0f };
+        static constexpr glm::vec3 s_worldRight{ 0.0f, -1.0f, 0.0f };
+        static constexpr glm::vec3 s_worldForward{ 1.0f, 0.0f, 0.0f };
     };
 }

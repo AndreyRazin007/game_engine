@@ -12,33 +12,74 @@ class GameEngineEditor : public game_engine::App {
 
 private:
     virtual void onUpdate() override {
+        bool isMovementCamera = false;
+
+        glm::vec3 movementDelta{ 0, 0, 0 };
+        glm::vec3 rotationDelta{ 0, 0, 0 };
+
         if (Input_t::isKeyPressed(KeyCode_t::KEY_W)) {
-            cameraPosition[2] -= 0.01f;
+            movementDelta.x += 0.005f;
+            isMovementCamera = true;
         } else if (Input_t::isKeyPressed(KeyCode_t::KEY_S)) {
-            cameraPosition[2] += 0.01f;
+            movementDelta.x -= 0.005f;
+            isMovementCamera = true;
         } else if (Input_t::isKeyPressed(KeyCode_t::KEY_A)) {
-            cameraPosition[0] -= 0.01f;
+            movementDelta.y -= 0.005f;
+            isMovementCamera = true;
         } else if (Input_t::isKeyPressed(KeyCode_t::KEY_D)) {
-            cameraPosition[0] += 0.01f;
+            movementDelta.y += 0.005f;
+            isMovementCamera = true;
         } else if (Input_t::isKeyPressed(KeyCode_t::KEY_E)) {
-            cameraPosition[1] += 0.01f;
+            movementDelta.z += 0.005f;
+            isMovementCamera = true;
         } else if (Input_t::isKeyPressed(KeyCode_t::KEY_Q)) {
-            cameraPosition[1] -= 0.01f;
+            movementDelta.z -= 0.005f;
+            isMovementCamera= true;
         } else if (Input_t::isKeyPressed(KeyCode_t::KEY_UP)) {
-            cameraRotation[0] += 0.5f;
+            rotationDelta.y -= 0.001f;
+            isMovementCamera = true;
         } else if (Input_t::isKeyPressed(KeyCode_t::KEY_DOWN)) {
-            cameraRotation[0] -= 0.5f;
+            rotationDelta.y += 0.001f;
+            isMovementCamera = true;
         } else if (Input_t::isKeyPressed(KeyCode_t::KEY_RIGHT)) {
-            cameraRotation[1] -= 0.5f;
+            rotationDelta.z -= 0.001f;
+            isMovementCamera = true;
         } else if (Input_t::isKeyPressed(KeyCode_t::KEY_LEFT)) {
-            cameraRotation[1] += 0.5f;
+            rotationDelta.z += 0.001f;
+            isMovementCamera = true;
+        } else if (Input_t::isKeyPressed(KeyCode_t::KEY_P)) {
+            rotationDelta.x += 0.001f;
+            isMovementCamera = true;
+        } else if (Input_t::isKeyPressed(KeyCode_t::KEY_O)) {
+            rotationDelta.x -= 0.001f;
+            isMovementCamera = true;
+        }
+
+        if (isMovementCamera) {
+            camera.addMovementAndRotation(movementDelta, rotationDelta);
         }
     }
 
     virtual void onUIDraw() override {
+        cameraPosition[0] = camera.getCameraPosition().x;
+        cameraPosition[1] = camera.getCameraPosition().y;
+        cameraPosition[2] = camera.getCameraPosition().z;
+        cameraRotation[0] = camera.getCameraRotation().x;
+        cameraRotation[1] = camera.getCameraRotation().y;
+        cameraRotation[2] = camera.getCameraRotation().z;
+
         ImGui::Begin("Editor");
-        ImGui::SliderFloat3("Camera position", cameraPosition, -10.0f, 10.0f);
-        ImGui::SliderFloat3("Camera rotation", cameraRotation, 0, 360.0f);
+
+        if (ImGui::SliderFloat3("camera position", cameraPosition, -10.0f, 10.0f)) {
+            camera.setPosition(glm::vec3{cameraPosition[0], cameraPosition[1],
+                                         cameraPosition[2]});
+        }
+
+        if (ImGui::SliderFloat3("camera rotation", cameraRotation, 0, 360.0f)) {
+            camera.setRotation(glm::vec3{cameraRotation[0], cameraRotation[1],
+                                         cameraRotation[2]});
+        }
+
         ImGui::Checkbox("Perspective camera", &perspectiveCamera);
         ImGui::End();
     }

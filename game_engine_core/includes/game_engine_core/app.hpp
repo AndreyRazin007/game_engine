@@ -25,7 +25,7 @@ namespace game_engine {
         float cameraPosition[3] = { 0.0f, 0.0f, 1.0f };
         float cameraRotation[3] = { 0.0f, 0.0f, 0.0f };
         bool perspectiveCamera = true;
-        Camera camera;
+        Camera camera{glm::vec3{-5.0f, 0.0f, 0.0f}};
 
     private:
         std::unique_ptr<class Window> m_window;

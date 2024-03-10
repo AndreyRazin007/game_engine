@@ -1,6 +1,7 @@
 #include "game_engine_core/camera.hpp"
 
 #include "glm/trigonometric.hpp"
+#include "glm/ext/matrix_transform.hpp"
 
 namespace game_engine {
     Camera::Camera(const glm::vec3 &position, const glm::vec3 &rotation,
@@ -11,30 +12,28 @@ namespace game_engine {
     }
 
     void Camera::updateViewMatrix() {
-        float rotateInRadiansX = glm::radians(-m_rotation.x);
-        glm::mat4 rotateMatrixX(1, 0, 0, 0,
-            0, cos(rotateInRadiansX), sin(rotateInRadiansX), 0,
-            0, -sin(rotateInRadiansX), cos(rotateInRadiansX), 0,
-            0, 0, 0, 1);
+        const float rollInRadians = glm::radians(m_rotation.x);
+        const float pitchInRadians = glm::radians(m_rotation.y);
+        const float yawInRadians = glm::radians(m_rotation.z);
 
-        float rotateInRadiansY = glm::radians(-m_rotation.y);
-        glm::mat4 rotateMatrixY(cos(rotateInRadiansY), 0, -sin(rotateInRadiansY), 0,
-            0, 1, 0, 0,
-            sin(rotateInRadiansY), 0, cos(rotateInRadiansY), 0,
-            0, 0, 0, 1);
+        const glm::mat3 rotateMatrixX(1, 0, 0,
+                                      0, cos(rollInRadians), sin(rollInRadians),
+                                      0, -sin(rollInRadians), cos(rollInRadians));
 
-        float rotateInRadiansZ = glm::radians(-m_rotation.z);
-        glm::mat4 rotateMatrix(cos(rotateInRadiansZ), sin(rotateInRadiansZ), 0, 0,
-            -sin(rotateInRadiansZ), cos(rotateInRadiansZ), 0, 0,
-            0, 0, 1, 0,
-            0, 0, 0, 1);
+        const glm::mat3 rotateMatrixY(cos(pitchInRadians), 0, -sin(pitchInRadians),
+                                      0, 1, 0,
+                                      sin(pitchInRadians), 0, cos(pitchInRadians));
 
-        glm::mat4 translateMatrix(1, 0, 0, 0,
-            0, 1, 0, 0,
-            0, 0, 1, 0,
-            -m_position[0], -m_position[1], -m_position[2], 1);
+        const glm::mat3 rotateMatrixZ(cos(yawInRadians), sin(yawInRadians), 0,
+                                      -sin(yawInRadians), cos(yawInRadians), 0,
+                                      0, 0, 1);
 
-        m_viewMatrix = rotateMatrixY * rotateMatrixX * translateMatrix;
+        const glm::mat3 eulerRotateMatrix = rotateMatrixZ * rotateMatrixY * rotateMatrixX;
+        m_direction = glm::normalize(eulerRotateMatrix * s_worldForward);
+        m_right = glm::normalize(eulerRotateMatrix * s_worldRight);
+        m_up = glm::cross(m_right, m_direction);
+
+        m_viewMatrix = glm::lookAt(m_position, m_position + m_direction, m_up);
     }
 
     void Camera::updateProjectionMatrix() {
@@ -79,5 +78,30 @@ namespace game_engine {
     void Camera::setProjectionMode(const ProjectionMode projectionMode) {
         m_projectionMode = projectionMode;
         updateProjectionMatrix();
+    }
+
+    void Camera::moveForward(const float delta) {
+        m_position += m_direction * delta;
+        updateViewMatrix();
+    }
+
+    void Camera::moveRight(const float delta) {
+        m_position += m_right * delta;
+        updateViewMatrix();
+    }
+
+    void Camera::moveUp(const float delta) {
+        m_position += m_up * delta;
+        updateViewMatrix();
+    }
+
+    void Camera::addMovementAndRotation(const glm::vec3 &movementDelta,
+                                        const glm::vec3 &rotationDelta) {
+        m_position += m_direction * movementDelta.x;
+        m_position += m_right * movementDelta.y;
+        m_position += m_up * movementDelta.z;
+        m_rotation += rotationDelta;
+
+        updateViewMatrix();
     }
 }

@@ -21,10 +21,10 @@
 
 namespace game_engine {
     GLfloat positionsColorsTwo[] = {
-        -0.5f, -0.5f, 0.0f, 1.0f, 1.0f, 0.0f,
-        0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 1.0f,
-        -0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 1.0f,
-        0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 0.0f
+        0.0f, -0.5f, -0.5f, 1.0f, 1.0f, 0.0f,
+        0.0f, 0.5f, -0.5f, 0.0f, 1.0f, 1.0f,
+        0.0f, -0.5f, 0.5f, 1.0f, 0.0f, 1.0f,
+        0.0f, 0.5f, 0.5f, 1.0f, 0.0f, 0.0f
     };
 
     GLuint indices[] = { 0, 1, 2, 3, 2, 1 };
@@ -163,16 +163,17 @@ namespace game_engine {
             glm::mat4 modelMatrix = translateMatrix * rotateMatrix * scaleMatrix;
             shaderProgram->setMatrix_4("model_matrix", modelMatrix);
 
-            camera.setPositionRotation(glm::vec3(cameraPosition[0], cameraPosition[1], cameraPosition[2]),
-                                         glm::vec3(cameraRotation[0], cameraRotation[1], cameraRotation[2]));
             camera.setProjectionMode(perspectiveCamera ?
                                      Camera::ProjectionMode::Perspective :
                                      Camera::ProjectionMode::Orthographic);
+
             shaderProgram->setMatrix_4("view_projection_matrix", camera.getProjectionMatrix() * camera.getViewMatrix());
             RendererOpenGL::draw(*vao);
 
             UIModule::onUIDrawBegin();
+
             bool show = true;
+
             UIModule::showExampleAppDockSpace(&show);
             ImGui::ShowDemoWindow();
             ImGui::Begin("Background Color Window");
