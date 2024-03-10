@@ -116,4 +116,38 @@ namespace game_engine {
             return type;
         }
     };
+
+    struct EventMouseButtonPressed : public BaseEvent {
+        MouseButton m_mouseButton;
+
+        double m_positionX;
+        double m_positionY;
+
+        static const EventType type = EventType::MouseButtonPressed;
+
+        EventMouseButtonPressed(const MouseButton mouseButton,
+                                const double positionX, const double positionY)
+            : m_mouseButton{mouseButton}, m_positionX{positionX}, m_positionY{positionY} {}
+
+        virtual EventType getType() const override {
+            return type;
+        }
+    };
+
+    struct EventMouseButtonReleased : public BaseEvent {
+        MouseButton m_mouseButton;
+
+        double m_positionX;
+        double m_positionY;
+
+        static const EventType type = EventType::MouseButtonReleased;
+
+        EventMouseButtonReleased(const MouseButton mouseButton,
+                                 const double positionX, const double positionY)
+            : m_mouseButton{mouseButton}, m_positionX(positionX) , m_positionY(positionY) {}
+
+        virtual EventType getType() const override {
+            return type;
+        }
+    };
 }

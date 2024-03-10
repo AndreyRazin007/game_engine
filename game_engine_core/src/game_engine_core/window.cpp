@@ -77,6 +77,32 @@ namespace game_engine {
             }
         });
 
+        glfwSetMouseButtonCallback(m_window, [](GLFWwindow *window,
+                                                int button, int action, int mods) {
+            WindowData &data = *static_cast<WindowData*>(glfwGetWindowUserPointer(window));
+
+            double positionX;
+            double positionY;
+
+            glfwGetCursorPos(window, &positionX, &positionY);
+
+            switch (action) {
+                case GLFW_PRESS: {
+                    EventMouseButtonPressed event(static_cast<MouseButton>(button), positionX, positionY);
+                    data.eventCallbackFunction(event);
+
+                    break;
+                }
+
+                case GLFW_RELEASE: {
+                    EventMouseButtonReleased event(static_cast<MouseButton>(button), positionX, positionY);
+                    data.eventCallbackFunction(event);
+
+                    break;
+                }
+            }
+        });
+
         glfwSetWindowSizeCallback(m_window, [](GLFWwindow *window, int width, int height) {
             WindowData &data = *static_cast<WindowData*>(glfwGetWindowUserPointer(window));
             data.width = width;
@@ -119,5 +145,14 @@ namespace game_engine {
     void Window::onUpdate() {
         glfwSwapBuffers(m_window);
         glfwPollEvents();
+    }
+
+    glm::vec2 Window::getCurrentCursorPosition() const {
+        double positionX;
+        double positionY;
+
+        glfwGetCursorPos(m_window, &positionX, &positionY);
+
+        return {positionX, positionY};
     }
 }

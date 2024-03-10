@@ -11,53 +11,64 @@ class GameEngineEditor : public game_engine::App {
     using Input_t = game_engine::Input;
 
 private:
-    virtual void onUpdate() override {
-        bool isMovementCamera = false;
+    double m_initialMousePositionX = 0.0;
+    double m_initialMousePositionY = 0.0;
 
+    virtual void onUpdate() override {
         glm::vec3 movementDelta{ 0, 0, 0 };
         glm::vec3 rotationDelta{ 0, 0, 0 };
 
         if (Input_t::isKeyPressed(KeyCode_t::KEY_W)) {
             movementDelta.x += 0.005f;
-            isMovementCamera = true;
         } else if (Input_t::isKeyPressed(KeyCode_t::KEY_S)) {
             movementDelta.x -= 0.005f;
-            isMovementCamera = true;
         } else if (Input_t::isKeyPressed(KeyCode_t::KEY_A)) {
             movementDelta.y -= 0.005f;
-            isMovementCamera = true;
         } else if (Input_t::isKeyPressed(KeyCode_t::KEY_D)) {
             movementDelta.y += 0.005f;
-            isMovementCamera = true;
         } else if (Input_t::isKeyPressed(KeyCode_t::KEY_E)) {
             movementDelta.z += 0.005f;
-            isMovementCamera = true;
         } else if (Input_t::isKeyPressed(KeyCode_t::KEY_Q)) {
             movementDelta.z -= 0.005f;
-            isMovementCamera= true;
         } else if (Input_t::isKeyPressed(KeyCode_t::KEY_UP)) {
             rotationDelta.y -= 0.001f;
-            isMovementCamera = true;
         } else if (Input_t::isKeyPressed(KeyCode_t::KEY_DOWN)) {
             rotationDelta.y += 0.001f;
-            isMovementCamera = true;
         } else if (Input_t::isKeyPressed(KeyCode_t::KEY_RIGHT)) {
             rotationDelta.z -= 0.001f;
-            isMovementCamera = true;
         } else if (Input_t::isKeyPressed(KeyCode_t::KEY_LEFT)) {
             rotationDelta.z += 0.001f;
-            isMovementCamera = true;
         } else if (Input_t::isKeyPressed(KeyCode_t::KEY_P)) {
             rotationDelta.x += 0.001f;
-            isMovementCamera = true;
         } else if (Input_t::isKeyPressed(KeyCode_t::KEY_O)) {
             rotationDelta.x -= 0.001f;
-            isMovementCamera = true;
         }
 
-        if (isMovementCamera) {
+        if (game_engine::Input::isMouseButtonPressed(game_engine::MouseButton::MOUSE_BUTTON_RIGHT)) {
             camera.addMovementAndRotation(movementDelta, rotationDelta);
+            glm::vec2 currentCursorPosition = getCurrentCursorPosition();
+
+            if (game_engine::Input::isMouseButtonPressed(game_engine::MouseButton::MOUSE_BUTTON_LEFT)) {
+                camera.moveRight(static_cast<float>(currentCursorPosition.x - m_initialMousePositionX) / 100.0f);
+                camera.moveUp(static_cast<float>(m_initialMousePositionY - currentCursorPosition.y) / 100.0f);
+            } else {
+                rotationDelta.z += static_cast<float>(m_initialMousePositionX - currentCursorPosition.x) / 5.0f;
+                rotationDelta.y -= static_cast<float>(m_initialMousePositionY - currentCursorPosition.y) / 5.0f;
+            }
+
+            m_initialMousePositionX = currentCursorPosition.x;
+            m_initialMousePositionY = currentCursorPosition.y;
         }
+
+        camera.addMovementAndRotation(movementDelta, rotationDelta);
+    }
+
+    virtual void onMouseButtonEvent(const game_engine::MouseButton buttonCode,
+                                    const double positionX,
+                                    const double positionY,
+                                    const bool pressed) override {
+        m_initialMousePositionX = positionX;
+        m_initialMousePositionY = positionY;
     }
 
     virtual void onUIDraw() override {

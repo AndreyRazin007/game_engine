@@ -22,6 +22,13 @@ namespace game_engine {
         virtual void onUpdate() {}
         virtual void onUIDraw() {}
 
+        virtual void onMouseButtonEvent(const MouseButton buttonCode,
+                                        const double positionX,
+                                        const double positionY,
+                                        const bool pressed) {}
+        
+        glm::vec2 getCurrentCursorPosition() const;
+
         float cameraPosition[3] = { 0.0f, 0.0f, 1.0f };
         float cameraRotation[3] = { 0.0f, 0.0f, 0.0f };
         bool perspectiveCamera = true;

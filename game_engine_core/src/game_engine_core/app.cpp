@@ -89,6 +89,28 @@ namespace game_engine {
                 m_isCloseWindow = true;
             });
         
+        m_eventDispatcher.addEventListener<EventMouseButtonPressed>(
+            [&](EventMouseButtonPressed &event) {
+                LOG_INFO("[Mouse button pressed: {0}, at ({1}, {2})",
+                         static_cast<size_t>(event.m_mouseButton), event.m_positionX, event.m_positionY);
+
+                Input::pressMouseButton(event.m_mouseButton);
+                onMouseButtonEvent(event.m_mouseButton,
+                                   event.m_positionX, event.m_positionY,
+                                   true);
+            });
+
+        m_eventDispatcher.addEventListener<EventMouseButtonReleased>(
+            [&](EventMouseButtonReleased &event) {
+                LOG_INFO("[Mouse button released: {0}, at ({1}, {2})",
+                         static_cast<size_t>(event.m_mouseButton), event.m_positionX, event.m_positionY);
+
+                Input::releaseMouseButton(event.m_mouseButton);
+                onMouseButtonEvent(event.m_mouseButton,
+                                   event.m_positionX, event.m_positionY,
+                                   false);
+            });
+
         m_eventDispatcher.addEventListener<EventKeyPressed>(
             [&](EventKeyPressed &event) {
                 if (event.m_keyCode <= KeyCode::KEY_Z) {
@@ -195,5 +217,9 @@ namespace game_engine {
         }
 
         return 0;
+    }
+
+    glm::vec2 App::getCurrentCursorPosition() const {
+        return m_window->getCurrentCursorPosition();
     }
 }

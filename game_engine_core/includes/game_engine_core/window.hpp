@@ -5,6 +5,8 @@
 #include <string>
 #include <functional>
 
+#include "glm/ext/vector_float2.hpp"
+
 struct GLFWwindow;
 
 namespace game_engine {
@@ -23,6 +25,8 @@ namespace game_engine {
         void onUpdate();
         unsigned int getWidth() const { return m_data.width; }
         unsigned int getHeight() const { return m_data.height; }
+
+        glm::vec2 getCurrentCursorPosition() const;
 
         void setEventCallback(const EventCallbackFunction &callback) {
             m_data.eventCallbackFunction = callback;

@@ -20,7 +20,7 @@ namespace game_engine {
         void setPositionRotation(const glm::vec3 &position, const glm::vec3 &rotation);
         void setProjectionMode(const ProjectionMode projectionMode);
 
-        const glm::mat4 &getViewMatrix() const { return m_viewMatrix; }
+        const glm::mat4 &getViewMatrix();
         const glm::mat4 &getProjectionMatrix() const { return m_projectionMatrix; }
 
         void moveForward(const float delta);
@@ -42,6 +42,8 @@ namespace game_engine {
 
         glm::mat4 m_viewMatrix;
         glm::mat4 m_projectionMatrix;
+
+        bool m_updateViewMatrix = false;
 
         ProjectionMode m_projectionMode;
 

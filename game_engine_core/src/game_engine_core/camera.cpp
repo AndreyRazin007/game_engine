@@ -11,6 +11,14 @@ namespace game_engine {
         updateProjectionMatrix();
     }
 
+    const glm::mat4 &Camera::getViewMatrix() {
+        if (m_updateViewMatrix) {
+            updateViewMatrix();
+        }
+
+        return m_viewMatrix;
+    }
+
     void Camera::updateViewMatrix() {
         const float rollInRadians = glm::radians(m_rotation.x);
         const float pitchInRadians = glm::radians(m_rotation.y);
@@ -60,19 +68,19 @@ namespace game_engine {
 
     void Camera::setPosition(const glm::vec3 &position) {
         m_position = position;
-        updateViewMatrix();
+        m_updateViewMatrix = true;
     }
 
     void Camera::setRotation(const glm::vec3 &rotation) {
         m_rotation = rotation;
-        updateViewMatrix();
+        m_updateViewMatrix = true;
     }
 
     void Camera::setPositionRotation(const glm::vec3 &position, const glm::vec3 &rotation) {
         m_position = position;
         m_rotation = rotation;
 
-        updateViewMatrix();
+        m_updateViewMatrix = true;
     }
 
     void Camera::setProjectionMode(const ProjectionMode projectionMode) {
@@ -82,17 +90,17 @@ namespace game_engine {
 
     void Camera::moveForward(const float delta) {
         m_position += m_direction * delta;
-        updateViewMatrix();
+        m_updateViewMatrix = true;
     }
 
     void Camera::moveRight(const float delta) {
         m_position += m_right * delta;
-        updateViewMatrix();
+        m_updateViewMatrix = true;
     }
 
     void Camera::moveUp(const float delta) {
-        m_position += m_up * delta;
-        updateViewMatrix();
+        m_position += s_worldUp * delta;
+        m_updateViewMatrix = true;
     }
 
     void Camera::addMovementAndRotation(const glm::vec3 &movementDelta,
@@ -102,6 +110,6 @@ namespace game_engine {
         m_position += m_up * movementDelta.z;
         m_rotation += rotationDelta;
 
-        updateViewMatrix();
+        m_updateViewMatrix = true;
     }
 }

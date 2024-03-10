@@ -10,8 +10,13 @@ namespace game_engine {
         static bool isKeyPressed(const KeyCode keyCode);
         static void pressKey(const KeyCode keyCode);
         static void releaseKey(const KeyCode keyCode);
-    
+
+        static bool isMouseButtonPressed(const MouseButton mouseButton);
+        static void pressMouseButton(const MouseButton mouseButton);
+        static void releaseMouseButton(const MouseButton mouseButton);
+
     private:
-        static bool m_keysPressed[static_cast<size_t>(KeyCode::KEY_LAST)];
+        static bool m_keysPressed[];
+        static bool m_mouseButtonsPressed[];
     };
 }
