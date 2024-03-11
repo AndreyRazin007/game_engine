@@ -14,6 +14,7 @@ namespace game_engine {
     const glm::mat4 &Camera::getViewMatrix() {
         if (m_updateViewMatrix) {
             updateViewMatrix();
+            m_updateViewMatrix = false;
         }
 
         return m_viewMatrix;

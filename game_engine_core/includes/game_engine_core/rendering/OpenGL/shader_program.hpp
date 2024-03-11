@@ -16,8 +16,10 @@ namespace game_engine {
 
         void bind() const;
         static void unbind();
+
         bool isCompiled() const { return m_isCompiled; }
         void setMatrix_4(const char *name, const glm::mat4 &matrix) const;
+        void setInt(const char *name, const int value) const;
 
     private:
         bool m_isCompiled = false;

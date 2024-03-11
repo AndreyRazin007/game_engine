@@ -99,7 +99,7 @@ private:
 int main() {
     auto gameEngineEditor = std::make_unique<GameEngineEditor>();
 
-    int returnCode = gameEngineEditor->start(1800, 900, "Game Engine");
+    int returnCode = gameEngineEditor->start(1800, 1000, "GameEngine Editor");
 
     return returnCode;
 }
