@@ -19,6 +19,7 @@ set(ENGINE_PRIVATE_INCLUDES
     includes/game_engine_core/rendering/OpenGL/vertex_buffer.hpp
     includes/game_engine_core/rendering/OpenGL/vertex_array.hpp
     includes/game_engine_core/rendering/OpenGL/index_buffer.hpp
+    includes/game_engine_core/rendering/OpenGL/texture_2D.hpp
 )
 
 set(ENGINE_PRIVATE_SOURCES
@@ -34,6 +35,7 @@ set(ENGINE_PRIVATE_SOURCES
     src/game_engine_core/rendering/OpenGL/vertex_buffer.cpp
     src/game_engine_core/rendering/OpenGL/vertex_array.cpp
     src/game_engine_core/rendering/OpenGL/index_buffer.cpp
+    src/game_engine_core/rendering/OpenGL/texture_2D.cpp
 )
 
 set(ENGINE_ALL_SOURCES
