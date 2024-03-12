@@ -16,6 +16,8 @@ namespace game_engine {
         static void setViewport(const unsigned int width, const unsigned int height,
                                 const unsigned int left_offset = 0,
                                 const unsigned int bottom_offset = 0);
+        static void enableDepthTest();
+        static void disableDepthTest();
 
         static const char *getVendorStr();
         static const char *getRendererStr();

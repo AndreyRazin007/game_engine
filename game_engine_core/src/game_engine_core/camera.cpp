@@ -49,8 +49,9 @@ namespace game_engine {
         if (m_projectionMode == ProjectionMode::Perspective) {
             float r = 0.1f;
             float t = 0.1f;
-            float f = 10;
+            float f = 100.0f;
             float n = 0.1f;
+
             m_projectionMatrix = glm::mat4(n / r, 0, 0, 0,
                                             0, n / t, 0, 0,
                                             0, 0, (-f - n) / (f - n), -1,
@@ -60,6 +61,7 @@ namespace game_engine {
             float t = 2;
             float f = 100;
             float n = 0.1f;
+
             m_projectionMatrix = glm::mat4(1 / r, 0, 0, 0,
                                             0, 1 / t, 0, 0,
                                             0, 0, -2 / (f - n), 0,

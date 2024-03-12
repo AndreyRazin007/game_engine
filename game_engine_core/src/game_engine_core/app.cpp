@@ -15,20 +15,33 @@
 
 #include "imgui/imgui.h"
 #include "glm/mat3x3.hpp"
+#include "glm/ext/matrix_transform.hpp"
 #include "glm/trigonometric.hpp"
 #include "GLFW/glfw3.h"
 
 #include <iostream>
 
 namespace game_engine {
-    GLfloat positionsColorsCoords[] = {
-        0.0f, -0.5f, -0.5f,   1.0f, 1.0f, 0.0f,   10.0f, 0.0f,
-        0.0f,  0.5f, -0.5f,   0.0f, 1.0f, 1.0f,   0.0f,  0.0f,
-        0.0f, -0.5f,  0.5f,   1.0f, 0.0f, 1.0f,   10.0f, 10.0f,
-        0.0f,  0.5f,  0.5f,   1.0f, 0.0f, 0.0f,   0.0f,  10.0f
+    GLfloat positionsCoords[] = {
+        -1.0f, -1.f, -1.f,  1.f, 0.f,
+        -1.0f,  1.f, -1.f,  0.f, 0.f,
+        -1.0f, -1.f,  1.f,  1.f, 1.f,
+        -1.0f,  1.f,  1.f,  0.f, 1.f,
+
+         1.0f, -1.f, -1.f,  1.f, 0.f,
+         1.0f,  1.f, -1.f,  0.f, 0.f,
+         1.0f, -1.f,  1.f,  1.f, 1.f,
+         1.0f,  1.f,  1.f,  0.f, 1.f
     };
 
-    GLuint indices[] = { 0, 1, 2, 3, 2, 1 };
+    GLuint indices[] = {
+        0, 1, 2, 3, 2, 1,
+        4, 5, 6, 7, 6, 5,
+        0, 4, 6, 0, 2, 6,
+        1, 5, 3, 3, 7, 5,
+        3, 7, 2, 7, 6, 2,
+        1, 5, 0, 5, 0, 4
+    };
 
     void generateCircle(unsigned char *data,
                         const unsigned int width,
@@ -98,19 +111,16 @@ namespace game_engine {
     const char *vertexShader =
         R"(#version 460
             layout(location = 0) in vec3 vertex_position;
-            layout(location = 1) in vec3 vertex_color;
-            layout(location = 2) in vec2 texture_coord;
+            layout(location = 1) in vec2 texture_coord;
 
             uniform mat4 model_matrix;
             uniform mat4 view_projection_matrix;
             uniform int current_frame;
 
-            out vec3 color;
             out vec2 texture_coord_smile;
             out vec2 texture_coord_quads;
 
             void main() {
-                color = vertex_color;
                 texture_coord_smile = texture_coord;
                 texture_coord_quads = texture_coord +
                     vec2(current_frame / 1000.0f, current_frame / 1000.0f);
@@ -121,7 +131,6 @@ namespace game_engine {
 
     const char *fragmentShader =
         R"(#version 460
-            in vec3 color;
             in vec2 texture_coord_smile;
             in vec2 texture_coord_quads;
 
@@ -137,8 +146,8 @@ namespace game_engine {
         )";
 
     std::unique_ptr<ShaderProgram> shaderProgram;
-    std::unique_ptr<VertexBuffer> positionsColorsVBO;
-    std::unique_ptr<IndexBuffer> indexBuffer;
+    std::unique_ptr<VertexBuffer> cubePositionsVBO;
+    std::unique_ptr<IndexBuffer> cubeIndexBuffer;
     std::unique_ptr<Texture2D> textureSmile;
     std::unique_ptr<Texture2D> textureQuads;
     std::unique_ptr<VertexArray> vao;
@@ -147,6 +156,14 @@ namespace game_engine {
     float rotate = 0.0f;
     float translate[3] = { 0.0f, 0.0f, 0.0f };
     float backgroundColor[4] = { 0.33f, 0.33f, 0.33f, 0.0f };
+
+    std::array<glm::vec3, 5> positions = {
+        glm::vec3(-2.f, -2.f, -4.f),
+        glm::vec3(-5.f,  0.f,  3.f),
+        glm::vec3(2.f,  1.f, -2.f),
+        glm::vec3(4.f, -3.f,  3.f),
+        glm::vec3(1.f, -7.f,  1.f)
+    };
 
     App::App() {
         LOG_INFO("Starting application");
@@ -257,18 +274,20 @@ namespace game_engine {
 
         BufferLayout bufferLayoutVec3_Vec3_Vec2 {
             ShaderDataType::Float3,
-            ShaderDataType::Float3,
             ShaderDataType::Float2
         };
 
         vao = std::make_unique<VertexArray>();
-        positionsColorsVBO = std::make_unique<VertexBuffer>(positionsColorsCoords, sizeof(positionsColorsCoords), bufferLayoutVec3_Vec3_Vec2);
-        indexBuffer = std::make_unique<IndexBuffer>(indices, sizeof(indices) / sizeof(GLuint));
+        cubePositionsVBO = std::make_unique<VertexBuffer>(positionsCoords,
+            sizeof(positionsCoords), bufferLayoutVec3_Vec3_Vec2);
+        cubeIndexBuffer = std::make_unique<IndexBuffer>(indices, sizeof(indices) / sizeof(GLuint));
 
-        vao->addVertexBuffer(*positionsColorsVBO);
-        vao->setIndexBuffer(*indexBuffer);
+        vao->addVertexBuffer(*cubePositionsVBO);
+        vao->setIndexBuffer(*cubeIndexBuffer);
 
         static int currentFrame = 0;
+
+        RendererOpenGL::enableDepthTest();
 
         while (!m_isCloseWindow) {
             RendererOpenGL::setClearColor(backgroundColor[0], backgroundColor[1],
@@ -295,7 +314,6 @@ namespace game_engine {
 
             glm::mat4 modelMatrix = translateMatrix * rotateMatrix * scaleMatrix;
             shaderProgram->setMatrix_4("model_matrix", modelMatrix);
-            shaderProgram->setInt("current_frame", currentFrame++);
 
             camera.setProjectionMode(perspectiveCamera ?
                                      Camera::ProjectionMode::Perspective :
@@ -303,6 +321,17 @@ namespace game_engine {
 
             shaderProgram->setMatrix_4("view_projection_matrix", camera.getProjectionMatrix() * camera.getViewMatrix());
             RendererOpenGL::draw(*vao);
+
+            for (const glm::vec3 &currentPosition : positions) {
+                glm::mat4 translateMatrix(1, 0, 0, 0,
+                                          0, 1, 0, 0,
+                                          0, 0, 1, 0,
+                                          currentPosition[0], currentPosition[1],
+                                              currentPosition[2], 1);
+
+                shaderProgram->setMatrix_4("model_matrix", translateMatrix);
+                RendererOpenGL::draw(*vao);
+            }
 
             UIModule::onUIDrawBegin();
 
