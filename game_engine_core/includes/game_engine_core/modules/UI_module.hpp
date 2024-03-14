@@ -9,7 +9,5 @@ namespace game_engine {
         static void onWindowClose();
         static void onUIDrawBegin();
         static void onUIDrawEnd();
-
-        static void showExampleAppDockSpace(bool *open);
     };
 }

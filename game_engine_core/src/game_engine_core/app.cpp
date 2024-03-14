@@ -173,9 +173,62 @@ namespace game_engine {
         LOG_INFO("Closing application");
     }
 
+    void App::draw() {
+        RendererOpenGL::setClearColor(backgroundColor[0], backgroundColor[1],
+                                      backgroundColor[2], backgroundColor[3]);
+        RendererOpenGL::clear();
+
+        shaderProgram->bind();
+
+        glm::mat4 scaleMatrix(scale[0], 0, 0, 0,
+                              0, scale[1], 0, 0,
+                              0, 0, scale[2], 0,
+                              0, 0, 0, 1);
+
+        float rotateInRadians = glm::radians(rotate);
+        glm::mat4 rotateMatrix(cos(rotateInRadians), sin(rotateInRadians), 0, 0,
+                               -sin(rotateInRadians), cos(rotateInRadians), 0, 0,
+                               0, 0, 1, 0,
+                               0, 0, 0, 1);
+
+        glm::mat4 translateMatrix(1, 0, 0, 0,
+                                  0, 1, 0, 0,
+                                  0, 0, 1, 0,
+                                  translate[0], translate[1], translate[2], 1);
+
+        glm::mat4 modelMatrix = translateMatrix * rotateMatrix * scaleMatrix;
+        shaderProgram->setMatrix_4("model_matrix", modelMatrix);
+        static int currentFrame = 0;
+        shaderProgram->setInt("current_frame", currentFrame++);
+
+        shaderProgram->setMatrix_4("view_projection_matrix",
+                                    camera.getProjectionMatrix() * camera.getViewMatrix());
+        RendererOpenGL::draw(*vao);
+
+        for (const glm::vec3 &currentPosition : positions) {
+            glm::mat4 translateMatrix(1, 0, 0, 0,
+                                      0, 1, 0, 0,
+                                      0, 0, 1, 0,
+                                      currentPosition[0], currentPosition[1],
+                                          currentPosition[2], 1);
+
+            shaderProgram->setMatrix_4("model_matrix", translateMatrix);
+            RendererOpenGL::draw(*vao);
+        }
+
+        UIModule::onUIDrawBegin();
+        onUIDraw();
+        UIModule::onUIDrawEnd();
+
+        m_window->onUpdate();
+        onUpdate();
+    }
+
     int App::start(unsigned int windowWidth, unsigned int windowHeight,
                    const char *title) {
         m_window = std::make_unique<Window>(title, windowWidth, windowHeight);
+        camera.setViewportSize(static_cast<float>(windowWidth),
+                               static_cast<float>(windowHeight));
 
         m_eventDispatcher.addEventListener<EventMouseMoved>(
             [](EventMouseMoved &event) {
@@ -183,14 +236,18 @@ namespace game_engine {
             });
 
         m_eventDispatcher.addEventListener<EventWindowResize>(
-            [](EventWindowResize &event) {
+            [&](EventWindowResize &event) {
                 LOG_INFO("[Resized] Changed size to {0}x{1}", event.width, event.height);
+
+                camera.setViewportSize(event.width, event.height);
+                draw();
             });
 
         m_eventDispatcher.addEventListener<EventWindowClose>(
             [&](EventWindowClose &event) {
                 LOG_INFO("[WindowClose]");
-                m_isCloseWindow = true;
+
+                close();
             });
         
         m_eventDispatcher.addEventListener<EventMouseButtonPressed>(
@@ -285,76 +342,10 @@ namespace game_engine {
         vao->addVertexBuffer(*cubePositionsVBO);
         vao->setIndexBuffer(*cubeIndexBuffer);
 
-        static int currentFrame = 0;
-
         RendererOpenGL::enableDepthTest();
 
         while (!m_isCloseWindow) {
-            RendererOpenGL::setClearColor(backgroundColor[0], backgroundColor[1],
-                                          backgroundColor[2], backgroundColor[3]);
-            RendererOpenGL::clear();
-
-            shaderProgram->bind();
-
-            glm::mat4 scaleMatrix(scale[0], 0, 0, 0,
-                                   0, scale[1], 0, 0,
-                                   0, 0, scale[2], 0,
-                                   0, 0, 0, 1);
-
-            float rotateInRadians = glm::radians(rotate);
-            glm::mat4 rotateMatrix(cos(rotateInRadians), sin(rotateInRadians), 0, 0,
-                                   -sin(rotateInRadians), cos(rotateInRadians), 0, 0,
-                                   0, 0, 1, 0,
-                                   0, 0, 0, 1);
-
-            glm::mat4 translateMatrix(1, 0, 0, 0,
-                                       0, 1, 0, 0,
-                                       0, 0, 1, 0,
-                                       translate[0], translate[1], translate[2], 1);
-
-            glm::mat4 modelMatrix = translateMatrix * rotateMatrix * scaleMatrix;
-            shaderProgram->setMatrix_4("model_matrix", modelMatrix);
-
-            camera.setProjectionMode(perspectiveCamera ?
-                                     Camera::ProjectionMode::Perspective :
-                                     Camera::ProjectionMode::Orthographic);
-
-            shaderProgram->setMatrix_4("view_projection_matrix", camera.getProjectionMatrix() * camera.getViewMatrix());
-            RendererOpenGL::draw(*vao);
-
-            for (const glm::vec3 &currentPosition : positions) {
-                glm::mat4 translateMatrix(1, 0, 0, 0,
-                                          0, 1, 0, 0,
-                                          0, 0, 1, 0,
-                                          currentPosition[0], currentPosition[1],
-                                              currentPosition[2], 1);
-
-                shaderProgram->setMatrix_4("model_matrix", translateMatrix);
-                RendererOpenGL::draw(*vao);
-            }
-
-            UIModule::onUIDrawBegin();
-
-            bool show = true;
-
-            UIModule::showExampleAppDockSpace(&show);
-            ImGui::ShowDemoWindow();
-            ImGui::Begin("Background Color Window");
-            ImGui::ColorEdit4("Background Color", backgroundColor);
-            ImGui::SliderFloat3("scale", scale, 0.0f, 2.0f);
-            ImGui::SliderFloat("rotate", &rotate, 0.0f, 360.0f);
-            ImGui::SliderFloat3("translate", translate, -1.0f, 1.0f);
-            ImGui::SliderFloat3("camera position", cameraPosition, -10.0f, 10.0f);
-            ImGui::SliderFloat3("camera rotation", cameraRotation, 0, 360.0f);
-            ImGui::Checkbox("Perspective camera", &perspectiveCamera);
-            ImGui::End();
-
-            onUIDraw();
-
-            UIModule::onUIDrawEnd();
-
-            m_window->onUpdate();
-            onUpdate();
+            draw();
         }
 
         m_window = nullptr;
@@ -364,5 +355,9 @@ namespace game_engine {
 
     glm::vec2 App::getCurrentCursorPosition() const {
         return m_window->getCurrentCursorPosition();
+    }
+
+    void App::close() {
+        m_isCloseWindow = true;
     }
 }

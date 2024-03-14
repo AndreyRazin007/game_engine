@@ -5,6 +5,7 @@
 #include "game_engine_core/app.hpp"
 
 #include "imgui/imgui.h"
+#include "imgui/imgui_internal.h"
 
 class GameEngineEditor : public game_engine::App {
     using KeyCode_t = game_engine::KeyCode;
@@ -63,6 +64,48 @@ private:
         camera.addMovementAndRotation(movementDelta, rotationDelta);
     }
 
+    void setupDockspaceMenu() {
+        static ImGuiDockNodeFlags dockspaceFlags = ImGuiDockNodeFlags_PassthruCentralNode | ImGuiDockNodeFlags_NoWindowMenuButton;
+        static ImGuiWindowFlags windowFlags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
+        windowFlags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
+        windowFlags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
+        windowFlags |= ImGuiWindowFlags_NoBackground;
+
+        const ImGuiViewport *viewport = ImGui::GetMainViewport();
+        ImGui::SetNextWindowPos(viewport->WorkPos);
+        ImGui::SetNextWindowSize(viewport->WorkSize);
+        ImGui::SetNextWindowViewport(viewport->ID);
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+        ImGui::Begin("DockSpace", nullptr, windowFlags);
+        ImGui::PopStyleVar(3);
+
+        ImGuiIO &io = ImGui::GetIO();
+        ImGuiID dockspaceId = ImGui::GetID("MyDockSpace");
+        ImGui::DockSpace(dockspaceId, ImVec2(0.0f, 0.0f), dockspaceFlags);
+
+        if (ImGui::BeginMenuBar()) {
+            if (ImGui::BeginMenu("File")) {
+                if (ImGui::MenuItem("New Scene...", NULL)) {}
+                if (ImGui::MenuItem("Open Scene...", NULL)) {}
+                if (ImGui::MenuItem("Save Scene...", NULL)) {}
+
+                ImGui::Separator();
+
+                if (ImGui::MenuItem("Exit", NULL)) {
+                    close();
+                }
+
+                ImGui::EndMenu();
+            }
+
+            ImGui::EndMenuBar();
+        }
+
+        ImGui::End();
+    }
+
     virtual void onMouseButtonEvent(const game_engine::MouseButton buttonCode,
                                     const double positionX,
                                     const double positionY,
@@ -72,12 +115,17 @@ private:
     }
 
     virtual void onUIDraw() override {
-        cameraPosition[0] = camera.getCameraPosition().x;
-        cameraPosition[1] = camera.getCameraPosition().y;
-        cameraPosition[2] = camera.getCameraPosition().z;
-        cameraRotation[0] = camera.getCameraRotation().x;
-        cameraRotation[1] = camera.getCameraRotation().y;
-        cameraRotation[2] = camera.getCameraRotation().z;
+        setupDockspaceMenu();
+        cameraPosition[0] = camera.getPosition().x;
+        cameraPosition[1] = camera.getPosition().y;
+        cameraPosition[2] = camera.getPosition().z;
+        cameraRotation[0] = camera.getRotation().x;
+        cameraRotation[1] = camera.getRotation().y;
+        cameraRotation[2] = camera.getRotation().z;
+
+        cameraFov = camera.getFieldOfView();
+        cameraNearPlane = camera.getNearClipPlane();
+        cameraFarPlane = camera.getFarClipPlane();
 
         ImGui::Begin("Editor");
 
@@ -91,7 +139,24 @@ private:
                                          cameraRotation[2]});
         }
 
-        ImGui::Checkbox("Perspective camera", &perspectiveCamera);
+        if (ImGui::SliderFloat("camera FOV", &cameraFov, 1.0f, 120.0f)) {
+            camera.setFieldOfView(cameraFov);
+        }
+        if (ImGui::SliderFloat("camera near clip plane", &cameraNearPlane, 0.1f, 10.0f))
+        {
+            camera.setNearClipPlane(cameraNearPlane);
+        }
+        if (ImGui::SliderFloat("camera far clip plane", &cameraFarPlane, 1.0f, 100.0f))
+        {
+            camera.setFarClipPlane(cameraFarPlane);
+        }
+        if (ImGui::Checkbox("Perspective camera", &perspectiveCamera))
+        {
+            camera.setProjectionMode(perspectiveCamera ?
+                                     game_engine::Camera::ProjectionMode::Perspective :
+                                     game_engine::Camera::ProjectionMode::Orthographic);
+        }
+
         ImGui::End();
     }
 };
